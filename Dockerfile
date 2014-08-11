@@ -1,6 +1,6 @@
 FROM golang:1.3
-ADD . /hub-hook
-WORKDIR /hub-hook/cli
-RUN go get && go build cli.go
-ENTRYPOINT ["/hub-hook/cli/cli"]
-CMD [":80"]
+ADD . /go/src/github.com/cpuguy83/dockerhub-webhook-listener
+WORKDIR /go/src/github.com/cpuguy83/dockerhub-webhook-listener/hub-listener
+RUN go get && go build
+ENTRYPOINT ["/go/src/github.com/cpuguy83/dockerhub-webhook-listener/hub-listener/hub-listener"]
+CMD ["-listen", "0.0.0.0:80"]
