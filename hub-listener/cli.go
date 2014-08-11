@@ -1,11 +1,15 @@
 package main
 
-import "flag"
+import (
+	"flag"
+
+	server "github.com/cpuguy83/dockerhub-webhook-listener"
+)
 
 var listenAddr = flag.String("listen", "localhost:8080", "<address>:<port> to listen on")
 
 func main() {
 	flag.Parse()
 
-	Serve(*listenAddr)
+	server.Serve(*listenAddr)
 }

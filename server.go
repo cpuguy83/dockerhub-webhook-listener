@@ -1,4 +1,4 @@
-package main
+package listener
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-var handlers = NewHandler()
+var msgHandlers = MsgHandlers()
 
 type HubMessage struct {
 	Repository struct {
@@ -52,5 +52,5 @@ func Log(handler http.Handler) http.Handler {
 }
 
 func notify(img HubMessage) {
-	handlers.Call(img)
+	msgHandlers.Call(img)
 }

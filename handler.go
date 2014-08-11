@@ -1,4 +1,4 @@
-package main
+package listener
 
 import "log"
 
@@ -27,7 +27,7 @@ func (r *Registry) Call(msg HubMessage) {
 	}
 }
 
-func NewHandler() Registry {
+func MsgHandlers() Registry {
 	var handlers Registry
 
 	handlers.Add((&Logger{}).Call)
