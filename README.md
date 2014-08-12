@@ -18,4 +18,3 @@ go build
 
 ## TODO
 1. Implement api key so we can know it's the hub making the call
-2. Use TLS, because TLS
