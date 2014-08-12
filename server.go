@@ -29,12 +29,22 @@ type HubMessage struct {
 type Config struct {
 	ListenAddr string
 	Mailgun    mailGunConfig
+	Tls        struct {
+		Key  string
+		Cert string
+	}
 }
 
-func Serve(config *Config) {
+func Serve(config *Config) error {
 	msgHandlers = MsgHandlers(config)
 	http.HandleFunc("/", reqHandler)
-	http.ListenAndServe(config.ListenAddr, Log(http.DefaultServeMux))
+	if config.Tls.Key != "" && config.Tls.Cert != "" {
+		log.Print("Starting with SSL")
+		return http.ListenAndServeTLS(config.ListenAddr, config.Tls.Cert, config.Tls.Key, Log(http.DefaultServeMux))
+	}
+	log.Print("Warning: Server is starting without SSL, you should not pass any credentials using this configuration")
+	log.Print("To use SSL, you must provide a config file with a [tls] section, and provide locations to a `key` file and a `cert` file")
+	return http.ListenAndServe(config.ListenAddr, Log(http.DefaultServeMux))
 }
 
 func reqHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +57,7 @@ func reqHandler(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 		return
 	}
-	go notify(imgConfig)
+	go handleMsg(imgConfig)
 }
 
 func Log(handler http.Handler) http.Handler {
@@ -57,6 +67,6 @@ func Log(handler http.Handler) http.Handler {
 	})
 }
 
-func notify(img HubMessage) {
+func handleMsg(img HubMessage) {
 	msgHandlers.Call(img)
 }

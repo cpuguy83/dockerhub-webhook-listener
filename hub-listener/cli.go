@@ -21,7 +21,9 @@ func main() {
 	}
 
 	log.Printf("Starting server on %s", *listenAddr)
-	server.Serve(config)
+	if err := server.Serve(config); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func parseConfig() (*server.Config, error) {
