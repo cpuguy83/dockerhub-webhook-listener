@@ -3,6 +3,8 @@
 This is just a simple HTTP server setup to listen for and handle DockerHub
 webhook calls.
 
+A simple `Logger` handler and a slightly more complex `Mailgun` handler are
+included for reference in creating handlers.
 
 ## Usage
 Add a config file using `-config-file`
