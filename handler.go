@@ -27,11 +27,11 @@ func (r *Registry) Call(msg HubMessage) {
 	}
 }
 
-func MsgHandlers(config *Config) Registry {
+func MsgHandlers() Registry {
 	var handlers Registry
 
 	handlers.Add((&Logger{}).Call)
-	handlers.Add((&Mailgun{config.Mailgun}).Call)
+	handlers.Add((&Mailgun{ServerConfig.Mailgun}).Call)
 
 	return handlers
 }

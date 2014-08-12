@@ -16,5 +16,11 @@ go build
 ./hub-listener -listen 0.0.0.0:80 -config-file config.ini
 ```
 
-## TODO
-1. Implement api key so we can know it's the hub making the call
+You should use SSL.
+To do so ad a `tls` section to your config file, with a `cert` and a `key` file
+
+You should also use authentication.
+Right now DockerHub doesn't really support this, but you can use an api key as a
+query param.
+To handle this, you need to add an `apikeys` section to the config file along
+with a list of `key`'s
