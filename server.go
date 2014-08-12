@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-var msgHandlers = MsgHandlers()
+var msgHandlers Registry
 
 type HubMessage struct {
 	Repository struct {
@@ -26,9 +26,15 @@ type HubMessage struct {
 	}
 }
 
-func Serve(addr string) {
+type Config struct {
+	ListenAddr string
+	Mailgun    mailGunConfig
+}
+
+func Serve(config *Config) {
+	msgHandlers = MsgHandlers(config)
 	http.HandleFunc("/", reqHandler)
-	http.ListenAndServe(addr, Log(http.DefaultServeMux))
+	http.ListenAndServe(config.ListenAddr, Log(http.DefaultServeMux))
 }
 
 func reqHandler(w http.ResponseWriter, r *http.Request) {
