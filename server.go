@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"bytes"
 )
 
 var msgHandlers Registry
 
 type HubMessage struct {
+	Callback_url string
 	Repository struct {
 		Status    string
 		RepoUrl   string `json:"repo_url"`
@@ -26,6 +28,11 @@ type HubMessage struct {
 	}
 }
 
+type CallbackMessage struct {
+	State            string `json:"state"`
+	Description      string `json:"description"`
+}
+
 type Config struct {
 	ListenAddr string
 	Mailgun    mailGunConfig
@@ -39,6 +46,7 @@ type Config struct {
 }
 
 var ServerConfig *Config
+var client = &http.Client{}
 
 func Serve(config *Config) error {
 	ServerConfig = config
@@ -57,21 +65,57 @@ func Serve(config *Config) error {
 	return http.ListenAndServe(config.ListenAddr, Log(http.DefaultServeMux))
 }
 
-func reqHandler(w http.ResponseWriter, r *http.Request) {
-	if authenticateRequest(r) {
-		decoder := json.NewDecoder(r.Body)
-		var imgConfig HubMessage
+// Send callback request
+func sendCallback(callbackUrl string, msg *CallbackMessage) {
+	log.Printf("Send callback to %s", callbackUrl)
 
-		err := decoder.Decode(&imgConfig)
-		if err != nil {
-			http.Error(w, "Could not decode json", 500)
-			log.Print(err)
-			return
-		}
+	jsonStr, err := json.Marshal(msg)
+	if err != nil {
+		log.Print("Failed to marshal callback message")
+		log.Print(err)
+		return
+	}
+
+	req, err := http.NewRequest("POST", callbackUrl, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		log.Print("Failed to make callback request")
+		log.Print(err)
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	_, err = client.Do(req)
+
+	if err != nil {
+		log.Print("Failed to request callback")
+		log.Print(err)
+		return
+	}
+
+	log.Print("Succeeded to request callback")
+}
+
+func reqHandler(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var imgConfig HubMessage
+
+	err := decoder.Decode(&imgConfig)
+	if err != nil {
+		http.Error(w, "Could not decode json", 500)
+		log.Print(err)
+		return
+	}
+
+	if authenticateRequest(r) {
 		go handleMsg(imgConfig)
 		return
 	}
+
 	http.Error(w, "Not Authorized", 401)
+	sendCallback(imgConfig.Callback_url, &CallbackMessage{
+		State: "failure",
+		Description: "Not authorized",
+	})
 }
 
 func Log(handler http.Handler) http.Handler {
@@ -83,6 +127,10 @@ func Log(handler http.Handler) http.Handler {
 
 func handleMsg(img HubMessage) {
 	msgHandlers.Call(img)
+	sendCallback(img.Callback_url, &CallbackMessage{
+		State: "success",
+		Description: "Hook successfully received",
+	})
 }
 
 func authenticateRequest(r *http.Request) bool {
