@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 
-	"code.google.com/p/gcfg"
+	"gopkg.in/gcfg.v1"
 
 	server "github.com/cpuguy83/dockerhub-webhook-listener"
 )
